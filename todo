@@ -1,0 +1,10 @@
+# display waypoint infos
+1. find an app that can show waypoint infos -> GPX viewer seems to be worthwhile. It can show the tracks, multiple at the same time, shows descriptions and can show the smartphones gps
+2. manually create and read gpx tracks with waypoint infos. -> Added example files that can be imported
+3. make output useable by an the app
+3.1 As a user I want to see waypoints with info
+3.2 As a user I want to be navigated along the waypoints
+
+
+
+Bonus Add portfolio of shortest path algorithms, e.g., use osm tsp and my greedy solution, compare each time running the app.

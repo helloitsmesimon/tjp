@@ -1,11 +1,4 @@
-from pydantic import BaseModel
-
-
-class Waypoint(BaseModel):
-    coordinates: tuple
-    name: str
-    description: str
-    comment: str="No Comment"
+from location_types import Waypoint
 
 
 def create_gpx_file(track: list[tuple], waypoints: list[Waypoint], gpx_name: str, track_name: str="Path", track_type: str="Cycle"):
@@ -17,8 +10,8 @@ def create_gpx_file(track: list[tuple], waypoints: list[Waypoint], gpx_name: str
     gpx_header += f'''</metadata>\n'''
 
     gpx_track = ''
-    gpx_track += f'''<trk>/n'''
-    gpx_track += f'''    <name>{track_name}</name>/n'''
+    gpx_track += f'''<trk>\n'''
+    gpx_track += f'''    <name>{track_name}</name>\n'''
     gpx_track += f'''    <type>{track_type}</type>\n'''
     gpx_track += f'''    <trkseg>\n'''
     for coord in track:

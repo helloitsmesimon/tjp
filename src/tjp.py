@@ -1,82 +1,32 @@
-import requests
-import json
-import pandas as pd
-import numpy as np
-from gpx_converter import Converter
+from gpx_helper import create_gpx_file
+from location_types import TourGuide, Waypoint
 
-def get_location_info(city, street, street_no=None):
-    location = ((str(street_no) + "+") if street_no is not None else "") + street.replace(" ", "+") + ",+" + city
-    location = location.replace(' ','').lower()
-    resp = requests.get(f'https://nominatim.openstreetmap.org/search?q={location}&format=json&polygon=1&addressdetails=0')
-    if resp.status_code != 200:
-        raise "Invalid request"
-    
-    return resp.content
-    
-def get_coords(city, street, street_no=None):
-    j = json.loads(get_location_info(city, street, street_no))
-    return j[0]['lat'], j[0]['lon']
+def main():
 
-coords = [
-    get_coords(street="Dreisamstrasse", city="Freiburg"), 
-    get_coords(street="Bismarckallee", city="Freiburg"), 
-    get_coords(street="Breisacher Strasse", city="Freiburg"), 
-    get_coords(street="Eschholzstrasse", city="Freiburg"),
-    get_coords(street="Günterstalstrasse", city="Freiburg"), 
-    get_coords(street="Habsburgerstrasse", city="Freiburg"), 
-    get_coords(street="Leopoldring", city="Freiburg"), 
-    get_coords(street="Lorettostrasse", city="Freiburg"), 
-    get_coords(street="Stadtstrasse", city="Freiburg"), 
-    get_coords(street="Talstrasse", city="Freiburg"), 
-    get_coords(street="Waldkircherstrasse", city="Freiburg"), 
-    get_coords(street="Kartäuserstrasse", city="Freiburg"),
-    get_coords(street="Möslestrasse", city="Freiburg"),
-    get_coords(street="Zähringerstrasse", street_no=12, city="Freiburg")
+    waypoints = [
+        Waypoint.from_args(comment="On the fence of the soccer field", street="Dreisamstrasse", street_no=25, city="Freiburg"), 
+        Waypoint.from_args(comment="On the wall of the bakery", street="Dreisamstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the bridge over the river", street="Bismarckallee", city="Freiburg"), 
+        Waypoint.from_args(comment="On the bulletin board of the library", street="Breisacher Strasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the door of the cinema", street="Eschholzstrasse", city="Freiburg"),
+        Waypoint.from_args(comment="On the lamp post near the park", street="Günterstalstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the window of the florist", street="Habsburgerstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the bus shelter at the intersection", street="Leopoldring", city="Freiburg"), 
+        Waypoint.from_args(comment="On the gate of the cemetery", street="Lorettostrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the mailbox of the post office", street="Stadtstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the sign of the hotel", street="Talstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the fence of the school", street="Waldkircherstrasse", city="Freiburg"), 
+        Waypoint.from_args(comment="On the bench of the church", street="Kartäuserstrasse", city="Freiburg"),
+        Waypoint.from_args(comment="On the tree of the forest", street="Möslestrasse", city="Freiburg"),
+        Waypoint.from_args(comment="On the balcony of the apartment", street="Zähringerstrasse", street_no=12, city="Freiburg")
     ]
 
+    guide = TourGuide(waypoints)
 
-config = dict()
+    track = guide.compute_greedy_roundtrip()
 
-def get_trip(coordinates, profile='biking'):
-    encoded_coords = ";".join([f'{lat},{lon}' for lat, lon in coordinates])
-    resp = requests.get(f'''http://router.project-osrm.org/trip/v1/{profile}/{encoded_coords}?steps=false&geometries=polyline&overview=full&annotations=true''')
-    if resp.status_code != 200:
-        raise "Invalid request"
-    
-    return json.loads(resp.content)
-
-def get_table(coordinates, profile='foot'):
-    encoded_coords = ";".join([f'{lat},{lon}' for lat, lon in coordinates])
-    resp = requests.get(f'''http://router.project-osrm.org/table/v1/{profile}/{encoded_coords}''')
-    if resp.status_code != 200:
-        raise "Invalid request"
-    
-    return json.loads(resp.content)['durations']
-
-table = get_table(coords)
-
-for i in range(len(coords)):
-    table[i][i] = np.inf
-
-def rm_column(arr, i):
-    for j in range(len(coords)):
-        arr[j][i] = np.inf
-
-i = 0
-trip = []
-for _ in range(len(coords)):
-    trip.append(i)
-    rm_column(table, i)
-    i = np.argmin(table[i])
+    create_gpx_file(track, waypoints, gpx_name="tjp_track")
 
 
-
-def full_result_to_coords(trip):
-    # uses location from the trip
-    return [coords[wp] for wp in trip]
-
-trip = full_result_to_coords(trip)
-df = pd.DataFrame(columns=['latitude','longitude'], data=trip)
-print(df)
-
-Converter.dataframe_to_gpx(input_df=df, output_file="test.gpx")
+if __name__ == "__main__":
+    main()

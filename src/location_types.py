@@ -6,7 +6,7 @@ from pydantic import BaseModel
 OSM_API = '''http://router.project-osrm.org'''
 LOCATION_SERVICE_API = '''https://nominatim.openstreetmap.org'''
 
-Coordinates = tuple[float, float]
+Coordinates = tuple[str, str]
 
 class Waypoint(BaseModel):
     coordinates: Coordinates
@@ -38,7 +38,7 @@ def _get_location_info(city: str, street: str, street_no: int | None):
 class TourGuide:
 # A TourGuide brings the list of locations in order and organizes a tour while retaining location information
     
-    def __init__(self, visits: list[Waypoint], profile='biking'):
+    def __init__(self, visits: list[Waypoint], profile: str):
         self.locations = visits
         self.profile = profile
 
@@ -63,7 +63,7 @@ class TourGuide:
 
     def _get_route(self, from_start, to_finish):
         coordinates = ";".join([f'{l.coordinates[0]},{l.coordinates[1]}' for l in [from_start, to_finish]])
-        resp = requests.get(f'''{OSM_API}/route/v1/{self.profile}/{coordinates}?alternatives=false&steps=true&geometries=polyline&overview=false&annotations=false''')
+        resp = requests.get(f'''{OSM_API}/route/v1/{self.profile}/{coordinates}?alternatives=false&steps=true&geometries=polyline6&overview=false&annotations=false''')
         if resp.status_code != 200:
             raise "Invalid request"
         steps = json.loads(resp.content)['routes'][0]['legs'][0]['steps']
@@ -77,7 +77,10 @@ class TourGuide:
         cur = 0
         path = []
         while cur + 1 < len(order):
-            path += self._get_route(order[cur], order[cur+1])
+            steps = self._get_route(order[cur], order[cur+1])
+            print(steps)
+            path += steps
+            cur += 1
 
         return path
 

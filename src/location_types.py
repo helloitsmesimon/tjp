@@ -15,11 +15,13 @@ class Coordinate(BaseModel):
     def __eq__(self, other):
         return self.latitude == other.latitude and self.longitude == other.longitude
 
+
 class Waypoint(BaseModel):
     coordinate: Coordinate
     name: str
     description: str
     comment: str="No Comment"
+
 
     def from_args(city: str, street: str, street_no: int | None=None, description: str="", comment: str="", name=""):
         kwargs = locals()
@@ -29,9 +31,11 @@ class Waypoint(BaseModel):
             kwargs['name'] = street
         return Waypoint(**kwargs)
     
+
 def _resolve_lat_lon(city, street, street_no=None):
     j = _get_location_info(city, street, street_no)
     return j[0]['lat'], j[0]['lon']
+
 
 def _get_location_info(city: str, street: str, street_no: int | None):
     location = ((str(street_no) + "+") if street_no is not None else "") + street.replace(" ", "+") + ",+" + city
@@ -66,28 +70,6 @@ class TourGuide:
 
     def compute_roundtrip(self) -> list[Coordinate]:
         c = self._get_osm_roundtrip()
-        # waypoints = [self.waypoints[wp['waypoint_index']] for wp in c['waypoints']]
         track = [Coordinate(latitude=str(coord[0]), longitude=str(coord[1])) for coord in polyline.decode(c['trips'][0]['geometry'])]
         return track
-
-
-    def _compute_greedy_waypoint_order(self) -> list[Waypoint]:
-        table = self._get_distance_table()
-        num_locations = len(self.locations)
-
-        for i in range(num_locations):
-            table[i][i] = np.inf
-
-        def rm_column(arr, i):
-            for j in range(num_locations):
-                arr[j][i] = np.inf
-
-        i = 0
-        trip = []
-        for _ in range(num_locations):
-            trip.append(self.locations[i])
-            rm_column(table, i)
-            i = np.argmin(table[i])
-
-        return trip
     

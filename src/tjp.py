@@ -5,8 +5,6 @@ def main():
 
     waypoints = [
         Waypoint.from_args(comment="On the fence of the soccer field", street="Dreisamstrasse", street_no=25, city="Freiburg"),
-        # Waypoint.from_args(comment="On the fence of the soccer field", street="Freiburger Landstrasse", street_no=25, city="Freiburg-Tiengen"), 
-        # Waypoint.from_args(comment="On the fence of the soccer field", street="Gerhart-Hauptmann-Straße", street_no=25, city="Mainz-Gonsenheim"), 
         Waypoint.from_args(comment="On the wall of the bakery", street="Dreisamstrasse", street_no=1, city="Freiburg"), 
         Waypoint.from_args(comment="On the bridge over the river", street="Bismarckallee", city="Freiburg"), 
         Waypoint.from_args(comment="On the bulletin board of the library", street="Breisacher Strasse", city="Freiburg"), 
@@ -25,7 +23,6 @@ def main():
 
     guide = TourGuide(waypoints, profile="bike")  # other profiles are bugged
 
-    # track = guide.compute_greedy_roundtrip()
     track = guide.compute_roundtrip()
     create_gpx_file(track, waypoints, gpx_name="tjp_track")
 

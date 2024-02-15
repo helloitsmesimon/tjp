@@ -1,7 +1,7 @@
-from location_types import Waypoint, Step
+from location_types import Waypoint, Coordinate
 
 
-def create_gpx_file(track: list[Step], waypoints: list[Waypoint], gpx_name: str, track_name: str="Path", track_type: str="Cycle"):
+def create_gpx_file(track: list[Coordinate], waypoints: list[Waypoint], gpx_name: str, track_name: str="Path", track_type: str="Cycle"):
     gpx_header = ''
     gpx_header += f'''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\n'''
     gpx_header += f'''<gpx version="1.1" creator="helloitsmesimon@github" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n'''
@@ -21,7 +21,7 @@ def create_gpx_file(track: list[Step], waypoints: list[Waypoint], gpx_name: str,
 
     gpx_waypoints = ''
     for waypoint in waypoints:
-        gpx_waypoints += f'''<wpt lat="{waypoint.latitude}" lon="{waypoint.longitude}">\n'''
+        gpx_waypoints += f'''<wpt lat="{waypoint.coordinate.latitude}" lon="{waypoint.coordinate.longitude}">\n'''
         gpx_waypoints += f'''    <name>{waypoint.name}</name>\n'''
         gpx_waypoints += f'''    <cmt>{waypoint.comment}</cmt>\n'''
         gpx_waypoints += f'''    <desc>{waypoint.description}</desc>\n'''
@@ -37,16 +37,14 @@ def create_gpx_file(track: list[Step], waypoints: list[Waypoint], gpx_name: str,
         file.write(gpx_content)
 
 
-
-
 def main():
-    wps = [Waypoint(coordinates=(48.703037, 10.938682), name="wp1", description="desc1", comment="Wow this one is nice!"),
-           Waypoint(coordinates=(48.650828, 11.065179), name="wp2", description="desc2"),
-           Waypoint(coordinates=(48.560527, 11.061123), name="wp3", description="desc3"),]
+    wps = [Waypoint(coordinates=Coordinate(latitude=48.703037, longitude=10.938682), name="wp1", description="desc1", comment="Wow this one is nice!"),
+           Waypoint(coordinates=Coordinate(latitude=48.650828, longitude=11.065179), name="wp2", description="desc2"),
+           Waypoint(coordinates=Coordinate(latitude=48.560527, longitude=11.061123), name="wp3", description="desc3"),]
 
     gpx_name = "TestGPX"
 
-    create_gpx_file(track=[(48.703037, 10.938682), (48.650828, 11.065179)], waypoints=wps, gpx_name=gpx_name)
+    create_gpx_file(track=[Coordinate(latitude=48.703037, longitude=10.938682), Coordinate(latitude=48.53037, longitude=10.868682)], waypoints=wps, gpx_name=gpx_name)
 
 if __name__ == "__main__":
     main()

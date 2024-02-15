@@ -1,7 +1,7 @@
-from location_types import Waypoint
+from location_types import Waypoint, Step
 
 
-def create_gpx_file(track: list[tuple], waypoints: list[Waypoint], gpx_name: str, track_name: str="Path", track_type: str="Cycle"):
+def create_gpx_file(track: list[Step], waypoints: list[Waypoint], gpx_name: str, track_name: str="Path", track_type: str="Cycle"):
     gpx_header = ''
     gpx_header += f'''<?xml version='1.0' encoding='UTF-8' standalone='yes' ?>\n'''
     gpx_header += f'''<gpx version="1.1" creator="helloitsmesimon@github" xmlns="http://www.topografix.com/GPX/1/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">\n'''
@@ -15,13 +15,13 @@ def create_gpx_file(track: list[tuple], waypoints: list[Waypoint], gpx_name: str
     gpx_track += f'''    <type>{track_type}</type>\n'''
     gpx_track += f'''    <trkseg>\n'''
     for coord in track:
-        gpx_track += f'''    <trkpt lat="{coord[0]}" lon="{coord[1]}"></trkpt>\n'''
+        gpx_track += f'''    <trkpt lat="{coord.latitude}" lon="{coord.longitude}"></trkpt>\n'''
     gpx_track += '''    </trkseg>\n</trk>\n'''
 
 
     gpx_waypoints = ''
     for waypoint in waypoints:
-        gpx_waypoints += f'''<wpt lat="{waypoint.coordinates[0]}" lon="{waypoint.coordinates[1]}">\n'''
+        gpx_waypoints += f'''<wpt lat="{waypoint.latitude}" lon="{waypoint.longitude}">\n'''
         gpx_waypoints += f'''    <name>{waypoint.name}</name>\n'''
         gpx_waypoints += f'''    <cmt>{waypoint.comment}</cmt>\n'''
         gpx_waypoints += f'''    <desc>{waypoint.description}</desc>\n'''

@@ -6,22 +6,26 @@ from pydantic import BaseModel
 OSM_API = '''http://router.project-osrm.org'''
 LOCATION_SERVICE_API = '''https://nominatim.openstreetmap.org'''
 
-Coordinates = tuple[str, str]
+
+class Step(BaseModel):
+    latitude: str
+    longitude: str  
 
 class Waypoint(BaseModel):
-    coordinates: Coordinates
+    latitude: str
+    longitude: str
     name: str
     description: str
     comment: str="No Comment"
 
     def from_args(city: str, street: str, street_no: int | None=None, description: str="", comment: str="", name=""):
         kwargs = locals()
-        kwargs['coordinates'] = _get_coords(city=city, street=street, street_no=street_no)
+        kwargs['latitude'], kwargs['longitude'] = _get_lat_lon(city=city, street=street, street_no=street_no)
         if name == "":
             kwargs['name'] = street
         return Waypoint(**kwargs)
     
-def _get_coords(city, street, street_no=None):
+def _get_lat_lon(city, street, street_no=None):
     j = json.loads(_get_location_info(city, street, street_no))
     return j[0]['lat'], j[0]['lon']
 
@@ -43,7 +47,7 @@ class TourGuide:
         self.profile = profile
 
     def _encode_coords_for_osm(self) -> str:
-        return ";".join([f'{l.coordinates[0]},{l.coordinates[1]}' for l in self.locations])
+        return ";".join([f'{l.longitude},{l.latitude}' for l in self.locations])
 
     def compute_osm_roundtrip(self):
         encoded_coords = self._encode_coords_for_osm()
@@ -62,13 +66,13 @@ class TourGuide:
         return json.loads(resp.content)['durations']
 
     def _get_route(self, from_start, to_finish):
-        coordinates = ";".join([f'{l.coordinates[0]},{l.coordinates[1]}' for l in [from_start, to_finish]])
+        coordinates = ";".join([f'{l.longitude},{l.latitude}' for l in [from_start, to_finish]])
         resp = requests.get(f'''{OSM_API}/route/v1/{self.profile}/{coordinates}?alternatives=false&steps=true&geometries=polyline6&overview=false&annotations=false''')
         if resp.status_code != 200:
             raise "Invalid request"
         steps = json.loads(resp.content)['routes'][0]['legs'][0]['steps']
-        coords = [step['maneuver']['location'] for step in steps]
-
+        coords = [Step(longitude=str(step['maneuver']['location'][0]), latitude=str(step['maneuver']['location'][1])) for step in steps]
+        
         return coords
 
     def compute_greedy_roundtrip(self) -> list[Waypoint]:
@@ -78,7 +82,7 @@ class TourGuide:
         path = []
         while cur + 1 < len(order):
             steps = self._get_route(order[cur], order[cur+1])
-            print(steps)
+            print(f'{order[cur].latitude},{order[cur].longitude}', steps)
             path += steps
             cur += 1
 

@@ -1,6 +1,7 @@
 import requests
 import json
 import numpy as np
+import polyline
 from pydantic import BaseModel
 
 OSM_API = '''http://router.project-osrm.org'''
@@ -9,7 +10,10 @@ LOCATION_SERVICE_API = '''https://nominatim.openstreetmap.org'''
 
 class Step(BaseModel):
     latitude: str
-    longitude: str  
+    longitude: str 
+
+    def __eq__(self, other):
+        return self.latitude == other.latitude and self.longitude == other.longitude
 
 class Waypoint(BaseModel):
     latitude: str
@@ -49,13 +53,7 @@ class TourGuide:
     def _encode_coords_for_osm(self) -> str:
         return ";".join([f'{l.longitude},{l.latitude}' for l in self.locations])
 
-    def compute_osm_roundtrip(self):
-        encoded_coords = self._encode_coords_for_osm()
-        resp = requests.get(f'''{OSM_API}/trip/v1/{self.profile}/{encoded_coords}?steps=false&geometries=polyline&overview=full&annotations=true''')
-        if resp.status_code != 200:
-            raise "Invalid request"
-        
-        return json.loads(resp.content)
+
 
     def _get_distance_table(self):
         encoded_coords = self._encode_coords_for_osm()
@@ -76,17 +74,41 @@ class TourGuide:
         return coords
 
     def compute_greedy_roundtrip(self) -> list[Waypoint]:
+        self._waypoint_roundtrip()
         order = self._compute_greedy_waypoint_order()
 
         cur = 0
         path = []
         while cur + 1 < len(order):
             steps = self._get_route(order[cur], order[cur+1])
-            print(f'{order[cur].latitude},{order[cur].longitude}', steps)
             path += steps
             cur += 1
 
-        return path
+        path += self._get_route(order[-1], order[0])  # for the roundtrip
+
+        path_without_duplicates = []
+        cur = 0
+        while cur + 1 < len(path):
+            if path[cur] != path[cur+1]:
+                path_without_duplicates.append(path[cur])
+            cur += 1
+
+        return path_without_duplicates
+    
+    def _get_osm_roundtrip(self):
+        encoded_coords = self._encode_coords_for_osm()
+        resp = requests.get(f'''{OSM_API}/trip/v1/{self.profile}/{encoded_coords}?steps=false&geometries=polyline&overview=full&annotations=true''')
+        if resp.status_code != 200:
+            raise "Invalid request"
+        
+        return json.loads(resp.content)
+    
+    def compute_roundtrip(self) -> list[Step]:
+        c = self._get_osm_roundtrip()
+        # waypoints = [self.waypoints[wp['waypoint_index']] for wp in c['waypoints']]
+        track = [Step(latitude=str(coord[0]), longitude=str(coord[1])) for coord in polyline.decode(c['trips'][0]['geometry'])]
+        return track
+
 
     def _compute_greedy_waypoint_order(self) -> list[Waypoint]:
         table = self._get_distance_table()

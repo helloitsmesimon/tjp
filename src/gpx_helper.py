@@ -14,8 +14,8 @@ def create_gpx_file(track: list[Step], waypoints: list[Waypoint], gpx_name: str,
     gpx_track += f'''    <name>{track_name}</name>\n'''
     gpx_track += f'''    <type>{track_type}</type>\n'''
     gpx_track += f'''    <trkseg>\n'''
-    for coord in track:
-        gpx_track += f'''    <trkpt lat="{coord.latitude}" lon="{coord.longitude}"></trkpt>\n'''
+    for step in track:
+        gpx_track += f'''    <trkpt lat="{step.latitude}" lon="{step.longitude}"></trkpt>\n'''
     gpx_track += '''    </trkseg>\n</trk>\n'''
 
 

@@ -23,10 +23,10 @@ def main():
         Waypoint.from_args(comment="On the balcony of the apartment", street="Zähringerstrasse", street_no=12, city="Freiburg")
     ]
 
-    guide = TourGuide(waypoints, profile="foot")  # other profiles are bugged
+    guide = TourGuide(waypoints, profile="bike")  # other profiles are bugged
 
-    track = guide.compute_greedy_roundtrip()
-
+    # track = guide.compute_greedy_roundtrip()
+    track = guide.compute_roundtrip()
     create_gpx_file(track, waypoints, gpx_name="tjp_track")
 
 
